@@ -12,7 +12,7 @@ function formParseWrapper(form, req) {
 }
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method === "post") {
+    if (req.method === "POST") {
         const { maxDownload, expireAt, filename, password, message, emails } = req.body;
 
         if (filename === undefined || password === undefined) {
