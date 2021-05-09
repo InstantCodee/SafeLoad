@@ -1,0 +1,51 @@
+datasource db {
+    provider = "sqlite"
+    url = "file:./safeload.sqlite"
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id          Int         @id @default(autoincrement())
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    name        String      @unique
+    isAdmin     Boolean     @default(false)
+    uploads     FileUpload[]
+}
+
+model Test {
+    data        String      @id
+}
+
+model FileUpload {
+    id          String      @id
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    expiresAt   DateTime?
+    maxDownload Int?
+    password    String
+    filename    String
+    downloads   Int         @default(0)
+    viewCount   Int         @default(0)
+    message     String?
+    auther      User?       @relation(fields: [autherId], references: [id])
+    autherId    Int?
+}
+
+model Settings {
+    id          Int         @id
+    unsafe      Boolean     @default(false)
+    language    String      @default("en")
+    theme       String      @default("default")
+
+    // Maximal size of the data vault folder
+    maxSize     Int         @default(51200)
+    maxMsgSize  Int
+
+    hashRounds  Int         @default(14)
+    hashMemory  Int         @default(32768)
+    hashPara    Int         @default(4)
+}
