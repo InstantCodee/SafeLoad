@@ -12,26 +12,31 @@ function formParseWrapper(form, req) {
 }
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-    const { maxDownload, expireAt, filename, password, message, emails } = req.body;
+    if (req.method === "post") {
+        const { maxDownload, expireAt, filename, password, message, emails } = req.body;
 
-    if (filename === undefined || password === undefined) {
-        res.status(401).send({ message: 'One or more required fields are missing.' });
-        return;
-    }
-
-    const id: string = uuidv4();
-
-    await prisma.fileUpload.create({
-        data: {
-            id,
-            maxDownload,
-            filename,
-            password,
-            message,
-            downloads: 0,
-            viewCount: 0
+        if (filename === undefined || password === undefined) {
+            res.status(401).send({ message: 'One or more required fields are missing.' });
+            return;
         }
-    });
-
-    res.status(200).send({});
+    
+        const id: string = uuidv4();
+    
+        await prisma.fileUpload.create({
+            data: {
+                id,
+                maxDownload,
+                filename,
+                password,
+                message,
+                downloads: 0,
+                viewCount: 0
+            }
+        });
+    
+        res.status(200).send({});
+    } else {
+        res.send('ok');
+    }
+    
 }
