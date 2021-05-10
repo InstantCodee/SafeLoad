@@ -16,34 +16,42 @@ model User {
     uploads     FileUpload[]
 }
 
-model Test {
-    data        String      @id
-}
-
 model FileUpload {
     id          String      @id
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
+    password    String
+    salt        String
+    
+    // When upload started and finished
+    uStarted    DateTime?
+    uFinished   DateTime?
+    uSecret     String
+
     expiresAt   DateTime?
     maxDownload Int?
-    password    String
     filename    String
+    filesize    BigInt?
     downloads   Int         @default(0)
     viewCount   Int         @default(0)
     message     String?
     auther      User?       @relation(fields: [autherId], references: [id])
     autherId    Int?
+
+    // 0 = Not uploaded yet, 1 = Upload started, 2 = Upload finished
+    // status      Int         @default(0)
 }
 
 model Settings {
-    id          Int         @id
+    id          Int         @id @default(1)
     unsafe      Boolean     @default(false)
     language    String      @default("en")
     theme       String      @default("default")
+    vaultPath   String      @default("./vault/")
 
     // Maximal size of the data vault folder
     maxSize     Int         @default(51200)
-    maxMsgSize  Int
+    maxMsgSize  Int         @default(256)
 
     hashRounds  Int         @default(14)
     hashMemory  Int         @default(32768)

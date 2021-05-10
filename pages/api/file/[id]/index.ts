@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma'
+import { hash } from 'argon2';
+import prisma from '../../../../lib/prisma'
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query;

@@ -18,10 +18,8 @@ export default function getConfig() {
 /**
  * This will update the cached config.
  */
-export async function pullConfig() {
-    console.log('Pull');
-    
-    config = await prisma.settings.findFirst({ where: { id: 1 } });
+export async function pullConfig() {    
+    config = await prisma.settings.findFirst({ where: { id: 1 } });    
     return config;
 }
 
