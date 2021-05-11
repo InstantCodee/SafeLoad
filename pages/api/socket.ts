@@ -1,5 +1,6 @@
 import { join, resolve } from 'path';
 import { Server, Socket } from 'socket.io';
+import { write, open, close } from 'fs';
 import getConfig, { pullConfig } from '../../lib/config';
 
 import prisma from '../../lib/prisma';
@@ -53,32 +54,57 @@ const ioHandler = async (req, res) => {
         });
 
         socket.on('initData', async data => {
-            const { filesize } = data;
-            console.log(filesize);            
+            const { filesize, checksum } = data;
+            console.log(filesize);
 
             if (socket.fileUpload === null) {
                 socket.emit('initData', { status: 401, message: 'You\'re not identified! You need to call the \'ident\' event first.' });
                 return;
             }
 
-            if (filesize === undefined) {
-                socket.emit('initData', { status: 400, message: 'You need to specify the total file size in KB.' });
+            if (filesize === undefined || checksum === undefined) {
+                socket.emit('initData', { status: 400, message: 'You need to specify the total file size in Byte and checksum.' });
+                return;
+            }
+
+            if (!(/[A-Fa-f0-9]{128}/g.test(checksum))) {
+                socket.emit('initData', { status: 400, message: 'Your checksum has be a valid SHA-512 hash.' });
                 return;
             }
 
             const file = await prisma.fileUpload.findUnique({ where: { id: socket.fileUpload } });
             if (file === null) {
-                socket.emit('initData', { status: 404, message: 'The document seems to vanished while your last call. Very strange. Quitting' });
+                socket.emit('initData', { status: 404, message: 'The document seems to vanished since your last call. Very strange. Quitting' });
                 socket.disconnect();
                 return;
             }
 
-            file.filesize = filesize;
-            file.uStarted = new Date();
+            await prisma.fileUpload.update({
+                where: { id: socket.fileUpload },
+                data: {
+                    filesize,
+                    checksum,
+                    uStarted: new Date()
+                }
+            });
 
             socket.initFinished = true;
             socket.filesize = filesize;
             socket.written = 0;
+
+            await pullConfig();
+            const filePath = join(resolve('.'), getConfig().vaultPath, socket.fileUpload);
+
+            // Open file
+            console.log('Open file', filePath);
+            open(filePath, 'a', (err, fd) => {
+                if (err) {
+                    socket.emit('initData', { status: 500, message: 'Cannot write to file.' });
+                    return;
+                }
+
+                socket.fd = fd;
+            });
             socket.emit('initData', { status: 200 });
         });
 
@@ -99,27 +125,41 @@ const ioHandler = async (req, res) => {
                 return;
             }
 
-            await pullConfig();
-            
-            const filePath = join(resolve('.'), getConfig().vaultPath, socket.fileUpload);
             socket.locked = true;
 
-            console.log('Would write ', binaryData.byteLength, ' KB to:', filePath);
+            // console.log('Would write ', binaryData.byteLength, ' byte');
 
-            socket.written += binaryData.byteLength;
+            write(socket.fd, binaryData, 0, binaryData.length, null, async (err, written) => {
+                if (err) {
+                    socket.emit('data', { status: 500, message: 'Cannot write to file.' });
+                    return;
+                }
 
-            console.log(`Wrote ${socket.written} KB of ${socket.filesize} ...`);
+                socket.written += binaryData.byteLength;
 
-            socket.locked = false;
+                console.log(`Wrote ${socket.written} Byte of ${socket.filesize} (${(socket.written / socket.filesize * 100).toFixed(2)} %) ...`);
 
-            if (socket.written >= socket.filesize) {
-                socket.emit('data', { status: 200, message: 'All data has been written. Quitting' });
-                socket.disconnect();
+                socket.locked = false;
 
-                return;
-            }
+                if (socket.written >= socket.filesize) {
+                    await prisma.fileUpload.update({
+                        where: { id: socket.fileUpload },
+                        data: {
+                            uFinished: new Date()
+                        }
+                    });
+                    socket.emit('data', { status: 200, message: 'All data has been written. Quitting' });
+                    socket.disconnect();
 
-            socket.emit('data', { status: 200 });
+                    close(socket.fd, () => {
+                        console.log('Closed file');
+                    });
+
+                    return;
+                }
+
+                socket.emit('data', { status: 200 });
+            });
         });
 
         // Usually I would know how much data I receive but since the file is getting encrypted on the fly
@@ -147,9 +187,12 @@ export default ioHandler
 interface ExtentedSocket extends Socket {
     fileUpload?: string;
 
-    filesize: number;
-    written: number;
+    filesize?: number;
+    written?: number;
 
-    initFinished: boolean;
+    // File descriptor. If none is provided then no file is open.
+    fd?: number;
+
+    initFinished?: boolean;
     locked?: boolean;
 }

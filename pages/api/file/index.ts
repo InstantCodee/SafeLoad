@@ -15,7 +15,7 @@ function formParseWrapper(form, req) {
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "POST") {
-        const { maxDownload, expireAt, filename, password, salt, message, emails } = req.body;
+        const { maxDownload, expiresAt, filename, password, salt, message, emails } = req.body;
 
         if (filename === undefined || password === undefined) {
             res.status(401).send({ message: 'One or more required fields are missing.' });

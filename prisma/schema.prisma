@@ -22,6 +22,7 @@ model FileUpload {
     updatedAt   DateTime    @updatedAt
     password    String
     salt        String
+    checksum    String?
     
     // When upload started and finished
     uStarted    DateTime?

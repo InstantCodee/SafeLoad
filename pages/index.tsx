@@ -1,8 +1,9 @@
 import { Settings } from '@prisma/client';
 import crypto from 'crypto';
-import { createMessage, encrypt, enums } from 'openpgp';
+import { createMessage, encrypt, enums, Message } from 'openpgp';
 import { useForm } from 'react-hook-form';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
+import { DefaultEventsMap } from 'socket.io-client/build/typed-events';
 
 import { random } from '../lib/random';
 
@@ -56,7 +57,7 @@ function HomePage({ c, chunkSize }) {
                     salt,
                     filename: encryptedFilename,
                     maxDownload: Number(data.maxDownload),
-                    expireAt: data.expireAt,
+                    expiresAt: data.expireAt,
                     emails: data.emails,
                     message: data.message
                 }),
@@ -70,22 +71,28 @@ function HomePage({ c, chunkSize }) {
 
             const reader = new FileReader();
             reader.readAsArrayBuffer(data.file[0]);
-            uploadFile(data.password, result.id, result.secret, reader)
+            initUpload(data.password, result.id, result.secret, reader)
         });
     };
 
-    function uploadFile(password: string, id: string, secret: string, reader: FileReader) {
+    /**
+     * Initialize file upload.
+     * @param password Password for encryption
+     * @param id ID of file upload
+     * @param secret Secret of file upload
+     * @param reader Open reader to target file
+     */
+    function initUpload(password: string, id: string, secret: string, reader: FileReader) {
         reader.onload = async (data) => {
             // Content is now a Int8Array
             const content = new Uint8Array(data.target.result as ArrayBuffer);
-            console.log(content);
 
             const contentMessage = await createMessage({ binary: content });
             const contentEncrypted = await encrypt({
                 message: contentMessage,
                 passwords: [password],
                 config: { preferredCompressionAlgorithm: enums.compression.zlib },
-                armor: false
+                armor: false,
             });
 
             console.debug('Encryption finished! Saved', 100 - (contentEncrypted.byteLength / content.byteLength * 100), '% on size.');
@@ -96,8 +103,12 @@ function HomePage({ c, chunkSize }) {
                 const { status, message } = data;
                 console.debug('Server said [ident]:', message, `(${status})`);
 
+                // Hash encrypted content
+                const checksum = crypto.createHash('sha512').update(contentEncrypted).digest('hex');
+                console.debug('Checksum:', checksum);
+
                 if (status == 200) {
-                    socket.emit('initData', { filesize: contentEncrypted.length });
+                    socket.emit('initData', { filesize: contentEncrypted.length, checksum });
                 }
             });
 
@@ -106,36 +117,47 @@ function HomePage({ c, chunkSize }) {
                 console.debug('Server said [initData]:', message, `(${status})`);
 
                 if (status == 200) {
-                    console.log('Start sending data (with a chunk size of ', chunkSize, ') with the size of', contentEncrypted.length);
-
-                    let chunk = new Uint8Array(chunkSize);
-                    let sentChunks = 0;
-                    let count = 0;
-
-                    for await (const byte of contentEncrypted) {
-                        const left = contentEncrypted.length - (sentChunks * chunkSize);
-                        chunk[count] = byte;
-                        count++;
-
-                        if (count == chunkSize) {
-                            console.log(`Send chunk (${contentEncrypted.length - ((1 + sentChunks) * chunkSize)} left):`, chunk);
-                            
-                            socket.emit('data', chunk);
-                            chunk = new Uint8Array(chunkSize);  // Clearing chunk
-                            count = 0;
-                            sentChunks += 1;
-                        } else if (left < chunkSize) {
-                            const remainingData = contentEncrypted.slice(contentEncrypted.length - left, contentEncrypted.length);
-                            console.log(`Send remaining data (${left} left):`, remainingData);
-                            socket.emit('data', remainingData);
-                            break;
-                        }
-                    }
+                    fileTransfer(socket, contentEncrypted);
                 }
             });
 
             socket.emit('ident', { id, secret });
         }
+    }
+
+    /**
+     * The function `initUpload()` has to be called prior to this. This function will take a open socket connection
+     * to tranfer the data in chunks.
+     * @param params 
+     */
+    async function fileTransfer(socket: Socket, buffer: Uint8Array, sentBytes: number = 0) {
+        const left = buffer.length - sentBytes;
+        if (left <= 0) return;
+
+        // E. g.: There are 162 byte left but 256 bytes could fit into a chunk, then only transmit the last remaining bytes.
+        let copyOver = left < chunkSize ? left : chunkSize;
+
+        let chunk = new Uint8Array(copyOver);
+
+        // console.log(`Send chunk (${left - chunkSize} left):`, chunk);
+
+        for (let i = 1; i < copyOver + 1; i++) {
+            const cursor = sentBytes + i;
+            chunk[i] = buffer[cursor];
+        }
+
+        console.debug(`Copied ${chunk.length} bytes of to chunk (${left - copyOver} byte remaining). Sending ...`);
+        socket.emit('data', chunk);
+
+        socket.once('data', data => {
+            const { status, message } = data;
+            if (status !== 200) {
+                console.error('A error occured while upload data:', message);
+                return;
+            }
+
+            fileTransfer(socket, buffer, sentBytes + copyOver);
+        });
     }
 
     const messagePlaceholder = `Message (max ${config.maxMsgSize} characters)`
