@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuidv4 } from 'uuid';
-import { sign } from 'jsonwebtoken';
-import prisma from '../../../lib/prisma'
-import formidable from 'formidable';
+
+import prisma from '../../../lib/prisma';
 import { random } from '../../../lib/random';
 
 function formParseWrapper(form, req) {

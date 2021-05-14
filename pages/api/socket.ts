@@ -10,7 +10,7 @@ const ioHandler = async (req, res) => {
         res.end();
         return;
     }
-    console.log('*First use, starting socket.io')
+    console.log('Start Socket.io server')
 
     const ioServer = new Server({
         pingTimeout: 10 * 1000 * 60,
@@ -44,6 +44,11 @@ const ioHandler = async (req, res) => {
             const upload = await prisma.fileUpload.findUnique({ where: { id } });
             if (upload === null || upload.uSecret !== secret) {
                 socket.emit('ident', { status: 404, message: 'Either your id or secret is wrong.' });
+                return;
+            }
+
+            if (upload.checksum !== null) {
+                socket.emit('ident', { status: 409, message: 'File already got uploaded.' });
                 return;
             }
 
@@ -110,6 +115,7 @@ const ioHandler = async (req, res) => {
 
         socket.on('data', async data => {
             const binaryData = new Uint8Array(data);
+
             if (socket.fileUpload === null) {
                 socket.emit('data', { status: 401, message: 'You\'re not identified! You need to call the \'ident\' event first.' });
                 return;
@@ -129,17 +135,12 @@ const ioHandler = async (req, res) => {
 
             // console.log('Would write ', binaryData.byteLength, ' byte');
 
-            write(socket.fd, binaryData, 0, binaryData.length, null, async (err, written) => {
+            const buf = Buffer.from(binaryData);
+            write(socket.fd, buf, 0, buf.length, null, async (err, written) => {
                 if (err) {
                     socket.emit('data', { status: 500, message: 'Cannot write to file.' });
                     return;
                 }
-
-                socket.written += binaryData.byteLength;
-
-                console.log(`Wrote ${socket.written} Byte of ${socket.filesize} (${(socket.written / socket.filesize * 100).toFixed(2)} %) ...`);
-
-                socket.locked = false;
 
                 if (socket.written >= socket.filesize) {
                     await prisma.fileUpload.update({
@@ -158,6 +159,11 @@ const ioHandler = async (req, res) => {
                     return;
                 }
 
+                socket.written += buf.length;
+
+                console.log(`Wrote ${socket.written} Byte of ${socket.filesize} (${(socket.written / socket.filesize * 100).toFixed(2)} %) ...`);
+
+                socket.locked = false;
                 socket.emit('data', { status: 200 });
             });
         });
