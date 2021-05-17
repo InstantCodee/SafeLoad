@@ -161,7 +161,7 @@ export const Uploader = ({ c, chunkSize }) => {
                 return;
             }
 
-            fileTransfer(socket, buffer, sentBytes + copyOver + 1);
+            fileTransfer(socket, buffer, sentBytes + copyOver);
         });
     }
 

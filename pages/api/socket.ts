@@ -159,9 +159,9 @@ const ioHandler = async (req, res) => {
                     return;
                 }
 
-                socket.written += buf.length;
+                socket.written += written;
 
-                console.log(`Wrote ${socket.written} Byte of ${socket.filesize} (${(socket.written / socket.filesize * 100).toFixed(2)} %) ...`);
+                console.log(`Wrote ${socket.written} Byte of ${socket.filesize} (${(socket.written / socket.filesize * 100).toFixed(2)} %) ... (received: ${written} bytes)`);
 
                 socket.locked = false;
                 socket.emit('data', { status: 200 });
