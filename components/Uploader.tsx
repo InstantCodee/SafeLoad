@@ -171,7 +171,7 @@ export const Uploader = ({ c, chunkSize }) => {
         <div className={styles.uploader}>
             <form className={styles.form} action="/api/file" method="POST" id="uploadForm" onSubmit={handleSubmit(onSubmit)}>
                 <div className={styles.dragArea}>
-                <input className={styles.upload} type='file' {...register('file')} /><br />
+                <input className={styles.upload} data-title="Blub" type='file' {...register('file')} /><br />
                 </div>
                 <input className={styles.pass} type="password" placeholder="Password" {...register('password')} /><br />
                 <div className={styles.wrapper}>
