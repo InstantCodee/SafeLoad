@@ -169,18 +169,21 @@ export const Uploader = ({ c, chunkSize }) => {
 
     return (
         <div className={styles.uploader}>
-            <h2 className={styles.head}>Ready to upload some data?</h2>
             <form className={styles.form} action="/api/file" method="POST" id="uploadForm" onSubmit={handleSubmit(onSubmit)}>
-                <input type='file' {...register('file')} /><br />
-                <input type="password" placeholder="Password" {...register('password')} /><br />
-                <input type="number" placeholder="Max. Downloads" {...register('maxDownload')} /><br />
-                <input type="number" placeholder="Expire (days)" {...register('expireAt')} /><br />
-                <input type="text" placeholder="E-Mails" {...register('emails')} /><br />
+                <div className={styles.dragArea}>
+                <input className={styles.upload} type='file' {...register('file')} /><br />
+                </div>
+                <input className={styles.pass} type="password" placeholder="Password" {...register('password')} /><br />
+                <div className={styles.wrapper}>
+                    <input className={styles.numberFieldInput} type="number" placeholder="Max. Downloads" {...register('maxDownload')} />
+                    <input className={styles.numberFieldInput} type="number" placeholder="Expire (days)" {...register('expireAt')} />
+                </div>
+                <input className={styles.emails} type="text" placeholder="E-Mails" {...register('emails')} /><br />
                 {errors.message && <p>Your message can only have {config.maxMsgSize} characters at maximum.</p>}
-                <input type="text" placeholder={messagePlaceholder} {...register('message', { maxLength: 200 })} /><br /><br />
+                <textarea className={styles.textArea} type="text" placeholder={messagePlaceholder} {...register('message', { maxLength: 200 })} /><br /><br />
             </form>
 
-            <button type="submit" form="uploadForm" className={styles.share}>Share</button>
+            <a className={styles.submit} type="submit" form="uploadForm" className={styles.share}>Share</a>
         </div>
     )
 }

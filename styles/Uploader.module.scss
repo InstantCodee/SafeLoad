@@ -1,19 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@200&display=swap');
+$color: #707070;
+$font: 'Exo 2',
+sans-serif;
 $box-width: 400px;
 $box-height: 500px;
 $box-padding: 1rem;
+$input-size: 180px;
+$box-area: calc(#{$box-width} - #{$box-padding});
+.wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 0.2fr;
+    gap: 0px 20px;
+    grid-template-areas: "left right";
+    width: 99.5%;
+}
+
+.wrapper:nth-child(1) {
+    grid-area: left;
+}
+
+.right {
+    grid-area: right;
+}
+
+.wrapper input {
+    width: 100% !important;
+}
 
 .uploader {
+    font-family: $font;
     position: absolute;
-
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 0.4fr 2fr 0.2fr;
+    grid-template-rows: 0.1fr 2fr 0.2fr;
     gap: 20px 0px;
-    grid-template-areas:
-        ". head ."
-        ". form ."
-        ". shareBtn .";
-
+    grid-template-areas: ". head ." ". form ." ". shareBtn .";
     left: calc(50vw - (#{$box-width} / 2) - #{$box-padding});
     top: calc(50vh - (#{$box-height} / 2) - #{$box-padding});
     width: $box-width;
@@ -27,13 +49,116 @@ $box-padding: 1rem;
 
 .share {
     grid-area: shareBtn;
+    background-image: linear-gradient(117.27deg, rgba(207, 29, 243, 0.822) 5.67%, rgba(109, 42, 122, 0.29) 77.43%);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    box-sizing: border-box;
+    background-size: 200% auto;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    height: 2.5rem;
+    transition: 0.6s;
+    text-align: center;
+    line-height: 38px;
+    letter-spacing: 5px;
+}
+
+.share:hover {
+    background-position: right center;
 }
 
 .form {
     grid-area: form;
 }
 
+.form input {
+    width: calc(#{$box-width} - 100px);
+    margin-bottom: 20px;
+}
+
 .head {
     grid-area: head;
     text-align: center;
+}
+
+.pass {
+    background: rgba(28, 28, 28, 0.29);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    box-sizing: border-box;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    height: 2.5rem;
+    padding-left: 15px;
+    font-family: $font;
+    font-weight: bold;
+    color: $color;
+}
+
+.pass:focus {
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    color: $color
+}
+
+.numberFieldInput {
+    background: rgba(28, 28, 28, 0.29);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    box-sizing: border-box;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    height: 2.5rem;
+    padding-left: 15px;
+    color: $color;
+    font-family: $font;
+    font-weight: bold;
+}
+
+.numberFieldInput[type=number]::-webkit-inner-spin-button,
+.numberFieldInput[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    color: $color;
+}
+
+.emails {
+    background: rgba(28, 28, 28, 0.29);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    box-sizing: border-box;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    height: 2.5rem;
+    padding-left: 15px;
+    font-family: $font;
+    font-weight: bold;
+    color: $color;
+}
+
+.emails:focus {
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    color: $color
+}
+
+.textArea {
+    background: rgba(28, 28, 28, 0.29);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    box-sizing: border-box;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    resize: none;
+    height: 6rem;
+    width: 100%;
+    padding: $box-padding;
+    font-family: $font;
+    font-weight: bold;
+    color: $color;
+}
+
+.textArea:focus {
+    color: $color;
+}
+
+.dragArea {
+    background: rgba(0, 33, 57, 0.08);
+    border: 1px dashed #FFFFFF;
+    box-sizing: border-box;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
 }
