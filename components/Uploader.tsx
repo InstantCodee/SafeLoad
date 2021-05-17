@@ -170,10 +170,14 @@ export const Uploader = ({ c, chunkSize }) => {
     return (
         <div className={styles.uploader}>
             <form className={styles.form} action="/api/file" method="POST" id="uploadForm" onSubmit={handleSubmit(onSubmit)}>
+                <div className={styles.dragArea}>
                 <input className={styles.upload} type='file' {...register('file')} /><br />
+                </div>
                 <input className={styles.pass} type="password" placeholder="Password" {...register('password')} /><br />
-                <input className={styles.numberFieldInput} type="number" placeholder="Max. Downloads" {...register('maxDownload')} /><br />
-                <input className={styles.numberFieldInput} type="number" placeholder="Expire (days)" {...register('expireAt')} /><br />
+                <div className={styles.wrapper}>
+                    <input className={styles.numberFieldInput} type="number" placeholder="Max. Downloads" {...register('maxDownload')} />
+                    <input className={styles.numberFieldInput} type="number" placeholder="Expire (days)" {...register('expireAt')} />
+                </div>
                 <input className={styles.emails} type="text" placeholder="E-Mails" {...register('emails')} /><br />
                 {errors.message && <p>Your message can only have {config.maxMsgSize} characters at maximum.</p>}
                 <textarea className={styles.textArea} type="text" placeholder={messagePlaceholder} {...register('message', { maxLength: 200 })} /><br /><br />

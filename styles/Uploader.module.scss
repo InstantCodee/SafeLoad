@@ -5,6 +5,29 @@ sans-serif;
 $box-width: 400px;
 $box-height: 500px;
 $box-padding: 1rem;
+$input-size: 180px;
+$box-area: calc(#{$box-width} - #{$box-padding});
+.wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 0.2fr;
+    gap: 0px 20px;
+    grid-template-areas: "left right";
+    width: 99.5%;
+}
+
+.wrapper:nth-child(1) {
+    grid-area: left;
+}
+
+.right {
+    grid-area: right;
+}
+
+.wrapper input {
+    width: 100% !important;
+}
+
 .uploader {
     font-family: $font;
     position: absolute;
@@ -130,4 +153,12 @@ $box-padding: 1rem;
 
 .textArea:focus {
     color: $color;
+}
+
+.dragArea {
+    background: rgba(0, 33, 57, 0.08);
+    border: 1px dashed #FFFFFF;
+    box-sizing: border-box;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
 }
