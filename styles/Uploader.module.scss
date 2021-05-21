@@ -63,6 +63,7 @@ $box-area: calc(#{$box-width} - #{$box-padding});
 }
 
 .share:hover {
+    cursor: pointer;
     background-position: right center;
 }
 

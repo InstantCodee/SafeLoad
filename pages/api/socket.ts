@@ -163,6 +163,16 @@ const ioHandler = async (req, res) => {
 
                 console.log(`Wrote ${socket.written} Byte of ${socket.filesize} (${(socket.written / socket.filesize * 100).toFixed(2)} %) ... (received: ${written} bytes)`);
 
+                if (socket.written == socket.filesize) {
+                    console.log(`Received all data. Closing file...`);
+
+                    close(socket.fd, (err) => {
+                        if (err) {
+                            console.error(`There was an error on closing the file with id ${socket.fileUpload}.`)
+                        }
+                    });
+                }
+
                 socket.locked = false;
                 socket.emit('data', { status: 200 });
             });

@@ -10,3 +10,24 @@
     top: 0;
     z-index: -1;
 }
+
+.userButton {
+    float: right;
+    padding: .5rem;
+    margin: 1rem;
+    background: rgba(28, 28, 28, 0.5);
+    backdrop-filter: blur(20px);
+    border-radius: 8px;
+    border-bottom: 0 solid white;
+    transition: .1s ease;
+
+    & svg {
+        translate: .1s ease;
+    }
+}
+
+.userButton:hover {
+    background: rgba(0, 0, 0, 0.75);
+    border-bottom: 3px solid white;
+    padding: .75rem;
+}

@@ -12,8 +12,21 @@ model User {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
     name        String      @unique
+    password    String
+    salt        String
+    email       String?
     isAdmin     Boolean     @default(false)
     uploads     FileUpload[]
+    sessions    UserSession[]
+}
+
+model UserSession {
+    id          String      @id
+    createdAt   DateTime    @default(now())
+    expiresAt   DateTime
+    device      String
+    user        User        @relation(fields: [userId], references: [id])
+    userId      Int
 }
 
 model FileUpload {
