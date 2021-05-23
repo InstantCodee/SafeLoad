@@ -1,17 +1,7 @@
-.bottom {
-    position: absolute;
-    padding-top: 30%;
-    bottom: 0;
-    background-size: contain;
-}
-
-.top {
-    position: absolute;
-    top: 0;
-    z-index: -1;
-}
-
 .userButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     float: right;
     padding: .5rem;
     margin: 1rem;
@@ -20,7 +10,8 @@
     border-radius: 8px;
     border-bottom: 0 solid white;
     transition: .1s ease;
-
+    height: 40px;
+    width: 40px;
     & svg {
         translate: .1s ease;
     }
@@ -30,4 +21,16 @@
     background: rgba(0, 0, 0, 0.75);
     border-bottom: 3px solid white;
     padding: .75rem;
+}
+
+.brand {}
+
+.grid {
+    position: absolute;
+    top: 10vh;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
 }
