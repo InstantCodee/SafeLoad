@@ -59,7 +59,7 @@ const ioHandler = async (req, res) => {
         });
 
         socket.on('initData', async data => {
-            const { filesize, checksum } = data;
+            const { filesize } = data;
             console.log(filesize);
 
             if (socket.fileUpload === null) {
@@ -67,15 +67,15 @@ const ioHandler = async (req, res) => {
                 return;
             }
 
-            if (filesize === undefined || checksum === undefined) {
-                socket.emit('initData', { status: 400, message: 'You need to specify the total file size in Byte and checksum.' });
+            if (filesize === undefined) {
+                socket.emit('initData', { status: 400, message: 'You need to specify the total file size in byte.' });
                 return;
             }
 
-            if (!(/[A-Fa-f0-9]{128}/g.test(checksum))) {
+            /*if (!(/[A-Fa-f0-9]{128}/g.test(checksum))) {
                 socket.emit('initData', { status: 400, message: 'Your checksum has be a valid SHA-512 hash.' });
                 return;
-            }
+            }*/
 
             const file = await prisma.fileUpload.findUnique({ where: { id: socket.fileUpload } });
             if (file === null) {
@@ -88,7 +88,6 @@ const ioHandler = async (req, res) => {
                 where: { id: socket.fileUpload },
                 data: {
                     filesize,
-                    checksum,
                     uStarted: new Date()
                 }
             });
@@ -98,7 +97,7 @@ const ioHandler = async (req, res) => {
             socket.written = 0;
 
             await pullConfig();
-            const filePath = join(resolve('.'), getConfig().vaultPath, socket.fileUpload);
+            const filePath = join(resolve('.'), (await getConfig()).vaultPath, socket.fileUpload);
 
             // Open file
             console.log('Open file', filePath);
@@ -142,36 +141,9 @@ const ioHandler = async (req, res) => {
                     return;
                 }
 
-                if (socket.written >= socket.filesize) {
-                    await prisma.fileUpload.update({
-                        where: { id: socket.fileUpload },
-                        data: {
-                            uFinished: new Date()
-                        }
-                    });
-                    socket.emit('data', { status: 200, message: 'All data has been written. Quitting' });
-                    socket.disconnect();
-
-                    close(socket.fd, () => {
-                        console.log('Closed file');
-                    });
-
-                    return;
-                }
-
                 socket.written += written;
 
                 console.log(`Wrote ${socket.written} Byte of ${socket.filesize} (${(socket.written / socket.filesize * 100).toFixed(2)} %) ... (received: ${written} bytes)`);
-
-                if (socket.written == socket.filesize) {
-                    console.log(`Received all data. Closing file...`);
-
-                    close(socket.fd, (err) => {
-                        if (err) {
-                            console.error(`There was an error on closing the file with id ${socket.fileUpload}.`)
-                        }
-                    });
-                }
 
                 socket.locked = false;
                 socket.emit('data', { status: 200 });
@@ -182,8 +154,24 @@ const ioHandler = async (req, res) => {
         // the client itself doesn't know how large the result will be. That why the client has to end the
         // transmission manually.
         socket.on('dataEnd', data => {
-            socket.emit('dataEnd', { status: 200 });
-            socket.disconnect();
+            console.log(`Received all data. Closing file...`);
+
+            close(socket.fd, async (err) => {
+                if (err) {
+                    console.error(`There was an error on closing the file with id ${socket.fileUpload}:`, err);
+                } else {
+                    await prisma.fileUpload.update({
+                        where: { id: socket.fileUpload },
+                        data: {
+                            uFinished: new Date(),
+                            filesize: socket.written
+                        }
+                    });
+
+                    socket.emit('dataEnd', { status: 200 });
+                    socket.disconnect();
+                }
+            });
         });
     });
 

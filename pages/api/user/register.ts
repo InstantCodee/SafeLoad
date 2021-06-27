@@ -29,7 +29,7 @@ async function handle(req: NextApiRequest, res: NextApiResponse) {
 
     const salt = random(8);
 
-    const config = getConfig();
+    const config = await getConfig();
     const hashedPassword = await hash(password, {
         memoryCost: config.hashMemory,
         parallelism: config.hashPara,

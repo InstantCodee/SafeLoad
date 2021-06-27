@@ -33,8 +33,7 @@ model FileUpload {
     id          String      @id
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
-    password    String
-    salt        String
+    proof       Bytes
     checksum    String?
     
     // When upload started and finished

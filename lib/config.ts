@@ -7,9 +7,9 @@ let config: Settings | undefined;
  * 
  * @returns Local config
  */
-export default function getConfig() {
+export default async function getConfig() {
     if (config === undefined) {
-        return undefined;
+        return pullConfig();
     }
     
     return config;
@@ -19,8 +19,7 @@ export default function getConfig() {
  * This will update the cached config.
  */
 export async function pullConfig() {    
-    config = await prisma.settings.findFirst({ where: { id: 1 } });    
-    return config;
+    return await prisma.settings.findFirst({ where: { id: 1 } });
 }
 
 /**

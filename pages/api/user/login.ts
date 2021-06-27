@@ -23,7 +23,7 @@ async function handle(req: NextApiRequest, res: NextApiResponse) {
         return;
     }
 
-    const config = getConfig();
+    const config = await getConfig();
     const user = await prisma.user.findFirst({ where: { name } });
     if (user === null) {
         await hash(password, {

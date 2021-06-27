@@ -18,11 +18,14 @@ const _authenticate: NextMiddleware = async (req: NextApiRequest, res: NextApiRe
     }
 
     const session = prisma.userSession.findFirst({ where: { id: req.cookies.auth } });
-    if (session === undefined) {
+    const resolvedSession = await session;
+    
+    if (resolvedSession === undefined) {
         res.redirect('/user/login');
         return;
     }
 
+    // Convert normal request to custom one to store the user inside the object.
     const slReq: SafeLoadRequest = req;
     slReq.user = await session.user();
 

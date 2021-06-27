@@ -22,7 +22,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "public/upload_worker.js"  ],
   "exclude": [
     "node_modules"
   ]
