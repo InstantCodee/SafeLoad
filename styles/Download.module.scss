@@ -1,0 +1,28 @@
+.passbox {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+
+    z-index: 50;
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(30px);
+}
+
+.form {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 50vh;
+    margin: auto;
+
+    width: fit-content;
+    padding: 1rem;
+    z-index: 51;
+    background-color: rgba(28, 28, 28, 0.7);
+    backdrop-filter: blur(60px);
+    border-color: #111111;
+    border-radius: 8px;
+    border-width: 12px;
+}
